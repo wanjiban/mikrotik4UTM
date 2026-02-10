@@ -1,12 +1,17 @@
-# MikroTik RouterOS Patcher 项目说明
+# MikroTik RouterOS UTM 虚拟机构建工具
 
 ## 项目概述
 
-本项目用于自动化构建 UTM 虚拟机镜像包，使用 Pkl 语言定义虚拟机配置，从 MikroTik 官方或 mikrotik.ltd 下载 RouterOS 系统镜像，最终生成可直接导入 UTM 的 `.utm` 虚拟机包。
+本项目通过 Pkl 配置语言自动化构建 UTM 虚拟机包，支持从 MikroTik 官方源或 mikrotik.ltd 镜像源下载 RouterOS CHR 镜像，生成可直接导入 UTM 的 `.utm` 虚拟机包。
 
-支持两种镜像源：
-- **官方源**：从 `download.mikrotik.com` 下载原始镜像
-- **PATCHED 源**：从 `mikrotik.ltd`（GitHub elseif/MikroTikPatch releases）下载已修补镜像
+主要特性：
+
+- **自动化构建**：通过 Pkl 语言定义虚拟机配置，自动生成 UTM 所需的所有文件
+- **双镜像源支持**：官方源 + 已修补源（mikrotik.ltd），满足不同需求
+- **多架构支持**：x86_64 (Intel/AMD) 和 aarch64 (Apple Silicon)
+- **多后端支持**：QEMU 和 Apple Virtualization Framework
+- **定时任务**：自动检测上游版本更新并触发构建
+- **智能清理**：自动清理失败的 workflow 运行记录
 
 ## 核心原理
 

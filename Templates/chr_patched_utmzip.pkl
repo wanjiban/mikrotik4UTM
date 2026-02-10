@@ -3,7 +3,7 @@ extends "../Pkl/utmzip.pkl"
 import "../Pkl/Patched.pkl"
 
 name = baseName
-baseName = "chr-patched.\(architecture).\(backend.toLowerCase()).\(patchedVersion._resolvedVersion)"
+baseName = "chr-patched.\(architecture).\(backend.toLowerCase()).\(patchedVersion._resolvedVersion)\(patchedVersion._archTag)"
 
 cpus = 2
 memory = 1.gib

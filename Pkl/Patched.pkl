@@ -8,8 +8,8 @@ class PatchedVersion {
   arch: "x86_64" | "aarch64"
   product: "chr" = "chr"
 
-  _resolvedVersion: String = _resolveVersion(name, arch)
-  _archTag: String = if (arch == "x86_64") "" else "-" + arch.replaceAll("aarch64", "arm64")
+  _resolvedVersion: String = _resolveVersion(name)
+  _archTag: String = if (arch == "x86_64") "" else "-arm64"
   _releaseTag: String = "\(_resolvedVersion)\(_archTag)"
 
   downloadUrl: URL.Download = new {
@@ -20,13 +20,9 @@ class PatchedVersion {
 
   _imageType: String = "img.zip"
 
-  function _resolveVersion(versionName: String, archName: String): String =
-    if (versionName == "stable" && archName == "aarch64")
-      read("https://upgrade.mikrotik.ltd/routeros/NEWESTa7.stable").text.split(" ")[0] + "-arm64"
-    else if (versionName == "stable")
+  function _resolveVersion(versionName: String): String =
+    if (versionName == "stable")
       read("https://upgrade.mikrotik.ltd/routeros/NEWESTa7.stable").text.split(" ")[0]
-    else if (versionName == "testing" && archName == "aarch64")
-      read("https://upgrade.mikrotik.ltd/routeros/NEWESTa7.testing").text.split(" ")[0] + "-arm64"
     else if (versionName == "testing")
       read("https://upgrade.mikrotik.ltd/routeros/NEWESTa7.testing").text.split(" ")[0]
     else

@@ -1,6 +1,7 @@
 module Patched
 
 import "./URL.pkl"
+import "./SVG.pkl"
 
 class PatchedVersion {
   name: String
@@ -18,8 +19,10 @@ class PatchedVersion {
   version: String = name
 }
 
-class PatchedIcon {
+class PatchedIcon extends SVG.Icon {
   name: String = "mikrotik_patched.svg"
+  style: "solid"|"line"? = null
+  fill: String? = "#00ff00"
   text: String = """
   <?xml version="1.0" encoding="UTF-8"?>
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41.83 44.62">

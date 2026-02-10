@@ -106,8 +106,6 @@ jobs:
           release_name: ${{ github.event.inputs.releaseprefix }} ${{ needs.build.outputs.chr-version }}
           body: |
             UTM 虚拟机包 - RouterOS CHR (已修补) ${{ needs.build.outputs.chr-version }}
-            使用 `pkl` ${{ github.event.inputs.pklversion }} 构建
-
             来源: https://mikrotik.ltd/
 
             ### 虚拟机列表
@@ -194,6 +192,4 @@ jobs:
 
             ### 更新日志
 
-            ```
-            ${{ needs.build.outputs.changelog }}
-            ```
+            https://mikrotik.ltd/

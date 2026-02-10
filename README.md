@@ -6,7 +6,7 @@
 
 支持两种镜像源：
 - **官方源**：从 `download.mikrotik.com` 下载原始镜像
-- **LTD 源**：从 `mikrotik.ltd`（GitHub elseif/MikroTikPatch releases）下载已修补镜像
+- **PATCHED 源**：从 `mikrotik.ltd`（GitHub elseif/MikroTikPatch releases）下载已修补镜像
 
 ## 核心原理
 
@@ -41,9 +41,9 @@ UTM 虚拟机是一个以 `.utm` 为后缀的包文件夹，包含：
 2. 从 `upgrade.mikrotik.com/routeros/NEWESTa7.<channel>` 获取指定通道的最新版本号
 3. 从 `download.mikrotik.com` 下载官方 RouterOS CHR 镜像
 
-**LTD 源**：
-1. `LTD.pkl` 中的 `LTDVersion` 类定义版本信息
-2. 从 `mikrotik.ltd` 网站获取版本信息
+**PATCHED 源**：
+1. `Patched.pkl` 中的 `PatchedVersion` 类定义版本信息
+2. 从 `mikrotik.ltd` 获取版本信息
 3. 从 `github.com/elseif/MikroTikPatch/releases` 下载已修补镜像
 
 **镜像类型**：
@@ -66,7 +66,7 @@ mikropkl/
 │   └── patched-version.pkl     # 已修补版本查询脚本
 ├── Templates/              # 虚拟机模板
 │   ├── chr.utmzip.pkl     # CHR 虚拟机模板（官方）
-│   ├── chr-patched.utmzip.pkl # CHR 虚拟机模板（已修补）
+│   ├── chr_patched_utmzip.pkl # CHR 虚拟机模板（已修补）
 │   └── rose.chr.utmzip.pkl # ROSE 虚拟机模板（带额外磁盘）
 ├── Manifests/             # 虚拟机清单（具体配置）
 │   ├── chr.x86_64.qemu.pkl
@@ -74,12 +74,12 @@ mikropkl/
 │   ├── chr.x86_64.apple.pkl
 │   ├── rose.chr.x86_64.qemu.pkl
 │   ├── rose.chr.aarch64.qemu.pkl
-│   ├── chr-patched.x86_64.qemu.pkl   # 已修补版本清单
-│   └── chr-patched.aarch64.qemu.pkl  # 已修补版本清单
+│   ├── chr_patched_x86_64_qemu.pkl   # 已修补版本清单
+│   └── chr_patched_aarch64_qemu.pkl  # 已修补版本清单
 ├── Files/                 # 静态文件
 │   └── efi_vars.fd       # Apple 虚拟化 EFI 变量
 ├── Makefile              # 构建脚本
-└── README.md             # 项目说明
+└── README.md             # 本项目说明
 ```
 
 ## 构建流程
@@ -96,7 +96,7 @@ brew install wget     # 下载工具
 ### 2. 本地构建
 
 ```bash
-git clone https://github.com/tikoci/mikropkl
+git clone https://github.com/wanjiban/mikropkl
 cd mikropkl
 git checkout pkl
 make              # 构建所有虚拟机
@@ -115,7 +115,7 @@ export UTM_ARCHITECTURE=aarch64
 
 ### 4. GitHub Actions 自动构建
 
-- 触发条件：推送到 main 或 pkl 分支，或创建 git tag
+- 触发条件：手动触发 workflow_dispatch 或定时任务检测到新版本
 - 构建产物：`.zip` 文件包含 `.utm` 包
 - 发布位置：GitHub Releases
 
@@ -127,7 +127,7 @@ export UTM_ARCHITECTURE=aarch64
 - 无额外磁盘
 - 适用于一般路由功能测试
 
-### 2. CHR-PATCHED（Cloud Hosted Router Patched）- 已修补版
+### 2. CHR-PATCHED - 已修补版
 
 - 基于 mikrotik.ltd 提供的已修补 RouterOS 镜像
 - 已修补公钥，支持完整功能
@@ -140,17 +140,25 @@ export UTM_ARCHITECTURE=aarch64
 - 用于测试 RouterOS 存储功能（RAID、BTRFS 等）
 - 默认磁盘处于未格式化状态
 
-### 3. 架构支持
+### 4. 架构支持
 
 | 架构 | QEMU | Apple | 说明 |
 |------|------|-------|------|
 | x86_64 | ✅ | ✅ | 64位 Intel/AMD |
 | aarch64 | ✅ | ❌ | 64位 ARM（Apple Silicon） |
 
-### 4. 虚拟化后端
+### 5. 虚拟化后端
 
 - **QEMU**：支持更广泛的设备和功能，包括额外磁盘、网络配置等
 - **Apple**：使用 Apple Virtualization Framework，启动更快，但功能受限
+
+## 定时任务
+
+### schedule workflow
+
+- **每日检查**：每天凌晨自动检查上游版本
+- **自动构建**：版本更新时自动触发构建
+- **清理**：自动删除失败的 workflow 运行记录
 
 ## 注意事项
 
@@ -184,17 +192,8 @@ export UTM_ARCHITECTURE=aarch64
 - 使用 MikroTik 官方镜像源 `download.mikrotik.com`
 - 版本检查使用 `upgrade.mikrotik.com/routeros/NEWESTa7.<channel>`
 
-**LTD 源**：
+**PATCHED 源**：
 - 使用 mikrotik.ltd 提供的已修补镜像（来自 GitHub elseif/MikroTikPatch releases）
-
-**版本配置**：
-```bash
-# 官方版本
-export CHR_VERSION=stable
-
-# LTD 已修补版本
-export CHR_VERSION=7.20.8  # 指定具体版本
-```
 
 ### 6. Apple 虚拟化特殊要求
 

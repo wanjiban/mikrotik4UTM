@@ -7,27 +7,27 @@ on:
       version:
         default: "stable"
         type: string
-        description: 'RouterOS Version or Channel (e.g., stable, 7.20.8)'
+        description: 'RouterOS 版本或通道 (例如: stable, 7.20.8)'
         required: true
       pklversion:
         default: "0.30.2"
         type: string
-        description: 'pkl Version'
+        description: 'pkl 版本'
         required: true
       makefileflags:
         default: "-d"
         type: string
-        description: 'Makefile options'
+        description: 'Makefile 选项'
         required: true
       tagprefix:
         default: "chr-patched-"
         type: string
-        description: 'Prefix to use in git tag'
+        description: 'git tag 前缀'
         required: true
       releaseprefix:
         default: "CHR-PATCHED"
         type: string
-        description: 'Prefix to use in release name'
+        description: 'Release 名称前缀'
         required: true
 
 jobs:
@@ -36,9 +36,10 @@ jobs:
     outputs:
       machines: ${{ steps.outputdirs.outputs.built }}
       chr-version: ${{ steps.get-routeros-version.outputs.version }}
+      changelog: ${{ steps.changelog.outputs.content }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Install packages into building machine
         run: |
           sudo apt-get update
@@ -53,6 +54,18 @@ jobs:
         id: get-routeros-version
         run: |
           echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+      - name: Fetch changelog
+        id: changelog
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          if [ "$VERSION" == "stable" ]; then
+            REMOTE_VERSION=$(curl -s https://upgrade.mikrotik.ltd/routeros/NEWESTa7.stable | cut -d' ' -f1)
+          elif [ "$VERSION" == "testing" ]; then
+            REMOTE_VERSION=$(curl -s https://upgrade.mikrotik.ltd/routeros/NEWESTa7.testing | cut -d' ' -f1)
+          else
+            REMOTE_VERSION="$VERSION"
+          fi
+          echo "content=$(curl -s "https://upgrade.mikrotik.ltd/routeros/${REMOTE_VERSION}/CHANGELOG" | head -100 | jq -Rs '.')" >> $GITHUB_OUTPUT || echo "content=$(echo '无可用更新日志')" >> $GITHUB_OUTPUT
       - name: Build using Makefile
         id: make
         run: |
@@ -88,12 +101,12 @@ jobs:
           tag_name: ${{ github.event.inputs.tagprefix }}${{ needs.build.outputs.chr-version }}
           release_name: ${{ github.event.inputs.releaseprefix }} ${{ needs.build.outputs.chr-version }}
           body: |
-            UTM virtual machines with RouterOS CHR (Patched) ${{ needs.build.outputs.chr-version }}
-            built using `pkl` ${{ github.event.inputs.pklversion }}
+            UTM 虚拟机包 - RouterOS CHR (已修补) ${{ needs.build.outputs.chr-version }}
+            使用 `pkl` ${{ github.event.inputs.pklversion }} 构建
 
-            Source: https://mikrotik.ltd/
+            来源: https://mikrotik.ltd/
 
-            ### Machines
+            ### 虚拟机列表
           draft: false
           prerelease: true
   fossilize:
@@ -144,35 +157,39 @@ jobs:
       - build
       - fossilize
     steps:
-      - name: Edit Release
+      - name: Edit Release with full content
         uses: irongut/EditRelease@v1.2.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           id:  ${{ needs.release.outputs.id }}
           body: |
 
-            ### Usage
+            ### 使用说明
 
-            ### Installation Options
+            ### 安装方式
 
-            #### Using `utm://`  in Terminal's `open`
-            On macOS, with [UTM](https://mac.getutm.app), install
-            1. Launch "Terminal"
-            2. Type `open '<utm_app_url>'`, replacing _utm_app_url_ with a `utm://...` link above - _make sure to 'single quote URL'_
-            3. UTM will open and prompt you if you want to download the machine
-            4. If accepted, the machine will be stored in UTM's default document directory
-            5. Use UTM to start the image, and a new window with a terminal to machine will appear
+            #### 使用 `utm://` 在终端中打开
+            在 macOS 上安装 [UTM](https://mac.getutm.app)：
+            1. 打开「终端」
+            2. 输入 `open '<utm_app_url>'`，将 `utm_app_url` 替换为上面的 `utm://...` 链接 - **注意用单引号包裹 URL**
+            3. UTM 会打开并提示是否下载虚拟机
+            4. 确认后，虚拟机将保存在 UTM 的默认文档目录
+            5. 启动虚拟机，会弹出一个窗口显示虚拟机终端
 
-            #### Just download the ZIP to control location of machine
-            The download links contain a UTM package inside a ZIP file.  When expanded,
-            assuming [UTM](https://mac.getutm.app) is installed, the folder ending in `.utm`
-            will launch in UTM, like any other macOS "document".
+            #### 直接下载 ZIP 文件
+            下载链接中的 ZIP 文件包含 UTM 虚拟机包。解压后，在已安装 [UTM](https://mac.getutm.app) 的情况下，`.utm` 文件夹会直接用 UTM 打开。
 
-            ### About Patched Images
+            ### 关于已修补镜像
 
-            These images are provided by [mikrotik.ltd](https://mikrotik.ltd/) and include:
-            - Patched public key for full functionality
-            - Online update support
-            - Online license activation
-            - Cloud backup support
-            - DDNS support
+            本镜像由 [mikrotik.ltd](https://mikrotik.ltd/) 提供，包含以下特性：
+            - 已修补公钥，支持完整功能
+            - 支持在线更新
+            - 支持在线授权
+            - 支持云备份
+            - 支持 DDNS
+
+            ### 更新日志
+
+            ```
+            ${{ needs.build.outputs.changelog }}
+            ```

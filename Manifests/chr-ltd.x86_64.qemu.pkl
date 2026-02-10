@@ -1,0 +1,10 @@
+// LTD patched CHR manifest
+amends "../Templates/chr-ltd.utmzip.pkl"
+import "../Pkl/LTD.pkl"
+
+backend = "QEMU"
+architecture = "x86_64"
+
+logoSvg = new LTD.LTDIcon {
+  style = "solid"
+}

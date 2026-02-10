@@ -1,0 +1,3 @@
+module ltdversion
+
+chrVersion: String = read?("env:CHR_VERSION") ?? "stable"

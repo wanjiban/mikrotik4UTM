@@ -2,7 +2,11 @@
 
 ## 项目概述
 
-本项目用于自动化构建 UTM 虚拟机镜像包，使用 Pkl 语言定义虚拟机配置，从 MikroTik 官方下载 RouterOS 系统镜像，最终生成可直接导入 UTM 的 `.utm` 虚拟机包。
+本项目用于自动化构建 UTM 虚拟机镜像包，使用 Pkl 语言定义虚拟机配置，从 MikroTik 官方或 mikrotik.ltd 下载 RouterOS 系统镜像，最终生成可直接导入 UTM 的 `.utm` 虚拟机包。
+
+支持两种镜像源：
+- **官方源**：从 `download.mikrotik.com` 下载原始镜像
+- **LTD 源**：从 `mikrotik.ltd`（GitHub elseif/MikroTikPatch releases）下载已修补镜像
 
 ## 核心原理
 
@@ -32,34 +36,46 @@ UTM 虚拟机是一个以 `.utm` 为后缀的包文件夹，包含：
 
 ### 3. 固件下载流程
 
+**官方源**：
 1. `CHR.pkl` 中的 `RouterOSVersion` 类定义版本信息
 2. 从 `upgrade.mikrotik.com/routeros/NEWESTa7.<channel>` 获取指定通道的最新版本号
 3. 从 `download.mikrotik.com` 下载官方 RouterOS CHR 镜像
-4. 镜像类型包括：
-   - `chr-<版本>.img.zip` - UEFI 模式镜像
-   - `chr-<版本>-<arch>.img.zip` - 带架构后缀的镜像
+
+**LTD 源**：
+1. `LTD.pkl` 中的 `LTDVersion` 类定义版本信息
+2. 从 `mikrotik.ltd` 网站获取版本信息
+3. 从 `github.com/elseif/MikroTikPatch/releases` 下载已修补镜像
+
+**镜像类型**：
+- `chr-<版本>.img.zip` - UEFI 模式镜像
+- `chr-<版本>-<arch>.img.zip` - 带架构后缀的镜像
 
 ## 项目结构
 
 ```
 mikropkl/
 ├── Pkl/                    # 核心 Pkl 模块
-│   ├── CHR.pkl            # RouterOS 版本和图标定义
+│   ├── CHR.pkl            # RouterOS 官方版本和图标定义
+│   ├── LTD.pkl            # RouterOS LTD（已修补）版本定义
 │   ├── URL.pkl            # 下载资源类定义
 │   ├── SVG.pkl            # SVG 图标基类
 │   ├── UTM.pkl            # UTM 配置类型定义
 │   ├── Randomish.pkl      # 随机数据生成工具
 │   ├── utmzip.pkl         # UTM 包生成核心逻辑
-│   └── chr-version.pkl     # 版本查询脚本
+│   ├── chr-version.pkl     # 官方版本查询脚本
+│   └── ltd-version.pkl     # LTD 版本查询脚本
 ├── Templates/              # 虚拟机模板
-│   ├── chr.utmzip.pkl     # CHR 虚拟机模板
+│   ├── chr.utmzip.pkl     # CHR 虚拟机模板（官方）
+│   ├── chr-ltd.utmzip.pkl # CHR 虚拟机模板（LTD）
 │   └── rose.chr.utmzip.pkl # ROSE 虚拟机模板（带额外磁盘）
 ├── Manifests/             # 虚拟机清单（具体配置）
 │   ├── chr.x86_64.qemu.pkl
 │   ├── chr.aarch64.qemu.pkl
 │   ├── chr.x86_64.apple.pkl
 │   ├── rose.chr.x86_64.qemu.pkl
-│   └── rose.chr.aarch64.qemu.pkl
+│   ├── rose.chr.aarch64.qemu.pkl
+│   ├── chr-ltd.x86_64.qemu.pkl   # LTD 版本清单
+│   └── chr-ltd.aarch64.qemu.pkl  # LTD 版本清单
 ├── Files/                 # 静态文件
 │   └── efi_vars.fd       # Apple 虚拟化 EFI 变量
 ├── Makefile              # 构建脚本
@@ -105,13 +121,20 @@ export UTM_ARCHITECTURE=aarch64
 
 ## 虚拟机类型说明
 
-### 1. CHR（Cloud Hosted Router）
+### 1. CHR（Cloud Hosted Router）- 官方版
 
 - 标准 RouterOS CHR 虚拟机
 - 无额外磁盘
 - 适用于一般路由功能测试
 
-### 2. ROSE（RouterOS Storage Edition）
+### 2. CHR-LTD（Cloud Hosted Router Patched）- LTD 已修补版
+
+- 基于 mikrotik.ltd 提供的已修补 RouterOS 镜像
+- 已修补公钥，支持完整功能
+- 支持在线更新、在线授权、云备份、DDNS
+- 无额外磁盘
+
+### 3. ROSE（RouterOS Storage Edition）
 
 - 基于 CHR，增加了 4 个 10GB 虚拟磁盘
 - 用于测试 RouterOS 存储功能（RAID、BTRFS 等）
@@ -157,9 +180,23 @@ export UTM_ARCHITECTURE=aarch64
 
 ### 5. 镜像下载
 
+**官方源**：
 - 使用 MikroTik 官方镜像源 `download.mikrotik.com`
 - 版本检查使用 `upgrade.mikrotik.com/routeros/NEWESTa7.<channel>`
-- 国内用户建议配置代理或使用国内镜像
+
+**LTD 源**：
+- 使用 mikrotik.ltd 提供的已修补镜像（来自 GitHub elseif/MikroTikPatch releases）
+- 国内用户可使用 GitHub 代理加速
+- LTD 镜像包含公钥修补，支持完整功能
+
+**版本配置**：
+```bash
+# 官方版本
+export CHR_VERSION=stable
+
+# LTD 已修补版本
+export CHR_VERSION=7.20.8  # 指定具体版本
+```
 
 ### 6. Apple 虚拟化特殊要求
 
@@ -194,3 +231,5 @@ A: 参考 README 中的 ROSE 使用说明，进行格式化和挂载
 - [UTM 文档](https://docs.getutm.app)
 - [RouterOS 文档](https://help.mikrotik.com/docs)
 - [MikroTik 官方下载](https://mikrotik.com/download)
+- [mikrotik.ltd - 已修补 RouterOS](https://mikrotik.ltd/)
+- [MikroTikPatch 项目](https://github.com/elseif/MikroTikPatch)

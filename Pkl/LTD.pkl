@@ -1,0 +1,29 @@
+module LTD
+
+import "./URL.pkl"
+
+class LTDVersion {
+  name: String
+  arch: "x86_64" | "aarch64"
+  product: "chr" = "chr"
+
+  downloadUrl: URL.Download = new {
+    name = "\(product)-\(version).\(_imageType)"
+    url = "https://github.com/elseif/MikroTikPatch/releases/download/\(version)\(archSuffix)/\(product)-\(version)\(archSuffix).\(_imageType)"
+    filename = "\(product)-\(version)\(archSuffix).img"
+  }
+
+  _imageType: String = "img.zip"
+  _archSuffix: String = if (arch == "x86_64" && product == "chr") "" else "-" + arch
+  version: String = name
+}
+
+class LTDIcon {
+  name: String = "mikrotik_ltd.svg"
+  text: String = """
+  <?xml version="1.0" encoding="UTF-8"?>
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41.83 44.62">
+      <path d="M41.83,13.83c0-1.77-.96-3.4-2.5-4.26L23.3.62c-1.48-.83-3.28-.83-4.76,0L2.5,9.57c-1.54.86-2.5,2.49-2.5,4.26v17.08c0,1.78.97,3.42,2.53,4.28l16.04,8.82c1.46.81,3.24.81,4.7,0l16.04-8.82c1.56-.86,2.53-2.5,2.53-4.28V13.83Z" fill="#00ff00"/>
+  </svg>
+  """
+}

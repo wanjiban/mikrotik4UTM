@@ -1,0 +1,33 @@
+open module chr-ltd.utmzip
+extends "../Pkl/utmzip.pkl"
+import "../Pkl/LTD.pkl"
+
+name = baseName
+baseName = "chr-ltd.\(architecture).\(backend.toLowerCase()).\(ltdVersion.version)"
+
+cpus = 2
+memory = 1.gib
+
+imageDownloadUrl = ltdVersion.downloadUrl
+
+additionalDisks: List<DataSize> = List()
+
+notes = """
+\(name)
+MikroTik RouterOS CHR (Patched) for UTM's \(backend) Virtualization on \(architecture).
+
+使用 mikrotik.ltd 提供的已修补镜像。
+
+默认用户名是 'admin'，无密码。
+
+更多信息请参阅 https://mikrotik.ltd/
+"""
+
+logoSvg = new LTD.LTDIcon {}
+
+ltdVersion: LTD.LTDVersion = new LTD.LTDVersion {
+  name = read?("env:CHR_VERSION") ?? "stable"
+  arch = outer.architecture
+    .replaceAll("x86_64","x86_64")
+    .replaceAll("aarch64","aarch64")
+}

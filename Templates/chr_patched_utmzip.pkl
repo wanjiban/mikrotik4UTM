@@ -1,4 +1,4 @@
-module chr_patched_utmzip
+open module chr_patched_utmzip
 extends "../Pkl/utmzip.pkl"
 import "../Pkl/Patched.pkl"
 

@@ -192,4 +192,4 @@ jobs:
 
             ### 更新日志
 
-            https://upgrade.mikrotik.ltd/routeros/${{ needs.build.outputs.chr-version }}/CHANGELOG
+            <a href="https://upgrade.mikrotik.ltd/routeros/${{ needs.build.outputs.chr-version }}/CHANGELOG" target="_blank">查看更新日志</a>

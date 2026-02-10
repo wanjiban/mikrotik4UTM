@@ -1,9 +1,14 @@
+// 虚拟机清单文件
+// 定义 aarch64 (ARM64) 架构的 CHR 虚拟机，使用 QEMU 虚拟化后端
 amends "../Templates/chr.utmzip.pkl"
 import "../Pkl/CHR.pkl"
 
+// 设置后端为 QEMU
 backend = "QEMU"
+// 设置架构为 aarch64
 architecture = "aarch64"
 
+// 配置图标：使用深紫色实心图标
 logoSvg = new CHR.Icon { 
     style = "solid"
     fill = CHR.purpleDark

@@ -1,34 +1,42 @@
 open module chr.utmzip
+// 继承 UTM 虚拟机包基础模块
 extends "../Pkl/utmzip.pkl"
+// 导入 CHR 模块
 import "../Pkl/CHR.pkl"
 
+// 生成虚拟机名称：chr.<架构>.<后端类型>.<版本号>
 name = baseName
 baseName = "chr.\(architecture).\(backend.toLowerCase()).\(chrVersion.version)"
 
-cpus = 2
-memory = 1.gib
+// 配置参数
+cpus = 2              // CPU 数量：2 个
+memory = 1.gib       // 内存大小：1 GiB
 
+// 系统镜像下载 URL
 imageDownloadUrl = chrVersion.downloadUrl
 
+// 额外磁盘列表（CHR 默认无额外磁盘）
 additionalDisks : List<DataSize> = List()
 
+// 虚拟机说明信息
 notes = 
   """
   \(name) 
   MikroTik RouterOS CHR for UTM's \(backend) Virtualization on \(architecture).  
 
-  Default username is 'admin', without password - please change when prompted.  
+  默认用户名是 'admin'，无密码 - 请在提示时更改。  
 
-  Speed is limited to 1Mb/s, but free forever.  
-  With trial or paid license, the speed limit can be changed.  
-  See https://help.mikrotik.com/docs for more information.
+  速度限制为 1Mb/s，但永久免费。  
+  使用试用或付费许可证可以解除速度限制。  
+  更多信息请参阅 https://help.mikrotik.com/docs。
   """
 
+// 使用 MikroTik 官方图标（实心样式）
 logoSvg = new CHR.Icon {
   style = "solid"
 }
 
-// override the actual .plist, to set CPU to "cortex-a710" for CHR
+// 覆盖配置文件，为 ARM64 架构设置 CPU 为 "cortex-a710"
 configPlist {
   System {
     when (outer.architecture == "aarch64") {
@@ -37,9 +45,9 @@ configPlist {
   }
 }
 
-// utmzip extension to set RouterOS version to use
+// RouterOS 版本配置
 chrVersion : CHR.RouterOSVersion = new CHR.RouterOSVersion { 
-  name = read?("env:CHR_VERSION") ?? "stable"  
+  name = read?("env:CHR_VERSION") ?? "stable"  // 从环境变量读取版本或通道
   arch = outer.architecture
     .replaceAll("x86_64","x86")
     .replaceAll("aarch64","arm64")

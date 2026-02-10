@@ -1,15 +1,18 @@
 open module SVG
 
+// SVG 图标基类
+// 所有图标类继承自此类
 abstract class Icon {
-  name: String
-  text: String
+  name: String  // 图标名称
+  text: String  // SVG 文本内容
 }
 
+// Pkl 官方图标类
 class PklIcon extends Icon {
   name = "pkl-custom.svg"
-  primaryColor = "#6b9543"
-  secondaryColor = "#c8d987"
-  tertiaryColor = "#e9f4ca" 
+  primaryColor = "#6b9543"   // 主色调
+  secondaryColor = "#c8d987"  // 次要色调
+  tertiaryColor = "#e9f4ca"   // 第三色调
   text = 
     """
     <?xml version="1.0" encoding="UTF-8"?>
@@ -38,11 +41,13 @@ class PklIcon extends Icon {
     """
 }
 
+// Iconify 图标类
+// 从 Iconify API 获取图标
 class Iconify extends Icon {
   name = tag
   text = read(url).text
   url = "https://\(source)/\(group)/\(tag).svg"
-  source = "api.iconify.design"
-  group = "file-icons"
-  tag = "pickle"
+  source = "api.iconify.design"  // Iconify API 服务器
+  group = "file-icons"            // 图标分组
+  tag = "pickle"                  // 图标标签
 }

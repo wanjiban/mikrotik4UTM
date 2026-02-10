@@ -1,7 +1,9 @@
 module URL
 
+// 下载资源类
+// 用于定义下载资源的名称、URL 和文件名
 open class Download {
-  name: String
-  url: String
-  filename : String = name
+  name: String      // 下载文件的名称
+  url: String       // 下载地址
+  filename : String = name  // 本地保存的文件名，默认为名称
 }

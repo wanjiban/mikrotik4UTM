@@ -1,18 +1,25 @@
+// ROSE 虚拟机模板
+// 基于 chr.utmzip 模板，增加 4 个额外磁盘用于测试存储功能
 extends "chr.utmzip.pkl"
 import "../Pkl/CHR.pkl"
 
+// 强制使用 QEMU 后端
 backend = "QEMU"
 
+// 虚拟机名称：rose.chr.<架构>.<后端类型>.<版本号>
 name = "rose.\(baseName)"
 
-notes = "\(super.notes)  This 'ROSE' image has extra disks of size: \(additionalDisks)"
+// 说明信息：包含额外磁盘大小
+notes = "\(super.notes)  此 'ROSE' 镜像包含额外磁盘，大小为：\(additionalDisks)"
 
+// 使用线条样式的 MikroTik 图标
 logoSvg = new CHR.Icon { 
     style = "line"
     fill = roseColor
 }
 
+// 配置 4 个 10GB 的额外磁盘
 additionalDisks = List(10.gb, 10.gb, 10.gb, 10.gb)
 
-// rose specific extensions
+// ROSE 特定配置：使用深绿色
 roseColor = CHR.black

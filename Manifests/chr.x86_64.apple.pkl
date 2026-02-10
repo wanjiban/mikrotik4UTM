@@ -1,12 +1,17 @@
+// 虚拟机清单文件
+// 定义 x86_64 架构的 CHR 虚拟机，使用 Apple 虚拟化框架
 amends "../Templates/chr.utmzip.pkl"
 import "../Pkl/CHR.pkl"
 
+// 设置后端为 Apple
 backend = "Apple"
+// 设置架构为 x86_64
 architecture = "x86_64"
 
+// 使用默认图标
 logoSvg = new CHR.Icon { }
 
-// this use FAT CHR images from tikoci/fat-chr re-partitioned images.
+// 使用 tikoci/fat-chr 的重新分区镜像
 imageDownloadUrl { 
   name = "chr-\(outer.chrVersion.version).img.zip"
   url = "https://github.com/tikoci/fat-chr/releases/download/\(outer.chrVersion.version)/chr-\(outer.chrVersion.version).img.zip"

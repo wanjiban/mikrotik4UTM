@@ -1,35 +1,49 @@
 module CHR
 
+// 导入 URL 和 SVG 模块
 import "./URL.pkl"
 import "./SVG.pkl"
 
-// TODO: more String's could have constraints (.length, RegEx), only more "enum-like" strings do
+// 类型别名定义
+// RouterOS 发布通道类型
 typealias RouterOSReleaseChannel =  ("stable"|"long-term"|"testing"|"development"|"upgrade")
+// RouterOS 产品类型
 typealias RouterOSReleaseProduct = ("routeros"|"chr")
+// RouterOS 架构类型
 typealias RouterOSReleaseArch = ("x86"|"arm64")
+// RouterOS 镜像文件类型
 typealias RouterOSReleaseImageType = ("img.zip"|"npk")
 
-// TODO: could just be function
+// RouterOS 版本类
+// 包含版本名称、架构、产品类型、下载 URL 等信息
 class RouterOSVersion {
-  name: String|RouterOSReleaseChannel
-  arch: RouterOSReleaseArch
-  product: RouterOSReleaseProduct = "chr"
+  name: String|RouterOSReleaseChannel  // 版本名称或发布通道
+  arch: RouterOSReleaseArch             // 系统架构
+  product: RouterOSReleaseProduct = "chr"  // 产品类型，默认为 CHR
+  // 下载 URL 配置
   downloadUrl : URL.Download = new {
-      name = "\(product)-\(version).\(_imageType)"
-      url = "https://download.mikrotik.com/routeros/\(version)/\(product)-\(version)\(_arch).\(_imageType)"
-      filename = "\(product)-\(version)\(_arch).img"
+      name = "\(product)-\(version).\(_imageType)"  // 文件名
+      url = "https://download.mikrotik.com/routeros/\(version)/\(product)-\(version)\(_arch).\(_imageType)"  // 下载地址
+      filename = "\(product)-\(version)\(_arch).img"  // 镜像文件名
   }
+  // 镜像类型：CHR 为 img.zip，其他为 npk
   _imageType: RouterOSReleaseImageType = if (product == "chr") "img.zip" else "npk" 
+  // 架构后缀：CHR x86 无后缀，其他添加架构后缀
   _arch: String = if (arch == "x86" && product == "chr") "" else "-\(arch)"
+  // 版本号：从通道名称解析或直接使用名称
   version: String = if (name is RouterOSReleaseChannel) getNameFromChannel(name) else name
   
+  // 从发布通道获取版本号的函数
+  // 通过访问 mikrotik.com 获取指定通道的最新版本号
   function getNameFromChannel(releaseChannelName : RouterOSReleaseChannel) : String = 
     read("https://upgrade.mikrotik.com/routeros/NEWESTa7.\(releaseChannelName)")
       .text.split(" ")[0]
-}
+ }
 
+// 图标类，继承自 SVG.Icon
 class Icon extends SVG.Icon {
   name = "mikrotik.svg"
+  // 图标文本：根据样式生成不同的 SVG 内容
   text: String = 
     if (style == null)
       read(url).text 
@@ -38,28 +52,31 @@ class Icon extends SVG.Icon {
     else 
       svgSolid(fill) 
 
+  // 图标 URL 生成规则
   url = "https://\(source)/\(group)/\(tag).svg"
-  source = "mikrotik.com" 
-  group = "logo/library/logo/SVG"
-  tag = "MT_Symbol_Line_Black"
+  source = "mikrotik.com"  // 图标来源服务器
+  group = "logo/library/logo/SVG"  // 图标分组
+  tag = "MT_Symbol_Line_Black"  // 图标标签
 
-
+  // 可选样式：实心或线条
   style: "solid"|"line"? = null
-  fill: String? = "#00ff00"
+  fill: String? = "#00ff00"  // 填充颜色
 
+  // 生成实心样式 SVG 图标
   function svgSolid(fill: String?) = 
     """
     <?xml version="1.0" encoding="UTF-8"?>
     <svg id="Layer_2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41.83 44.62">
         <g id="Layer_1-2">
             <path
-                d="M41.83,13.83c0-1.77-.96-3.4-2.5-4.26L23.3.62c-1.48-.83-3.28-.83-4.76,0L2.5,9.57c-1.54.86-2.5,2.49-2.5,4.26v17.08c0,1.78.97,3.42,2.53,4.28l16.04,8.82c1.46.81,3.24.81,4.7,0l16.04-8.82c1.56-.86,2.53-2.5,2.53-4.28V13.83ZM12.03,30.78c0,.4-.43.65-.78.46l-2.68-1.48c-.56-.31-.9-.89-.9-1.53v-8.07c0-.4.43-.65.78-.46l2.95,1.63c.39.21.63.62.63,1.07v8.38ZM34.16,28.19c0,.63-.34,1.22-.9,1.53l-2.68,1.48c-.35.19-.78-.06-.78-.46v-10.32c0-.4-.43-.65-.78-.46l-4.95,2.73c-.56.31-.9.89-.9,1.53v10.55c0,.32-.17.61-.45.76l-1.01.56c-.52.29-1.16.29-1.69,0l-.94-.52c-.28-.15-.45-.45-.45-.76v-10.66c0-.63-.34-1.22-.9-1.53l-9.81-5.42c-.17-.09-.27-.27-.27-.46v-.42c0-.63.34-1.22.9-1.53l1.4-.77c.52-.29,1.16-.29,1.69,0l8.48,4.69c.52.29,1.16.29,1.69,0l3.81-2.11c.36-.2.36-.72,0-.92l-8.51-4.7c-.36-.2-.36-.72,0-.92l2.9-1.6c.52-.29,1.16-.29,1.69,0l11.55,6.38c.56.31.9.89.9,1.53v11.81Z"
+                d="M41.83,13.83c0-1.77-.96-3.4-2.5-4.26L23.3.62c-1.48-.83-3.28-.83-4.76,0L2.5,9.57c-1.54.86-2.5,2.49-2.5,4.26v17.08c0,1.78.97,3.42,2.53,4.28l16.04,8.82c1.46.81,3.24.81,4.7,0l16.04-8.82c1.56-.86,2.53-2.5,2.53-4.28V13.83ZM12.03,30.78c0,.4-.43.65-.78.46l-2.68-1.48c-.56-.31-.9-.89-.9-1.53v-8.07c0-.4.43-.65.78-.46l2.95,1.63c.39.21.63.62.63,1.07v8.38ZM34.16,28.19c0,.63-.34,1.22-.9,1.53l-2.68,1.48c-.35.19-.78-.06-.78-.46v-10.32c0-.4.43-.65.78-.46l-4.95,2.73c-.56.31-.9.89-.9,1.53v10.55c0,.32-.17.61-.45.76l-1.01.56c-.52.29-1.16.29-1.69,0l-.94-.52c-.28-.15-.45-.45-.45-.76v-10.66c0-.63-.34-1.22-.9-1.53l-9.81-5.42c-.17-.09-.27-.27-.27-.46v-.42c0-.63.34-1.22.9-1.53l1.4-.77c.52-.29,1.16-.29,1.69,0l8.48,4.69c.52.29,1.16.29,1.69,0l3.81-2.11c.36-.2.36-.72,0-.92l-8.51-4.7c-.36-.2-.36-.72,0-.92l2.9-1.6c.52-.29,1.16-.29,1.69,0l11.55,6.38c.56.31.9.89.9,1.53v11.81Z"
                 style="fill:\(fill ?? "#0e0e10"); stroke-width:0px;" />
         </g>
     </svg>
     """
 
-    function svgLine(fill: String?) =
+  // 生成线条样式 SVG 图标
+  function svgLine(fill: String?) =
       """
       <?xml version="1.0" encoding="UTF-8"?>
       <svg id="Layer_2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41.83 44.62">
@@ -78,7 +95,7 @@ class Icon extends SVG.Icon {
       """
 }
 
-// "almost consts" for a few colors from mikrotik.com/logo specs
+// MikroTik 官方颜色规范常量定义
 hidden fixed black = "#0E0E10"
 hidden fixed gray = "#707372"
 hidden fixed light = "#C8C8C7"

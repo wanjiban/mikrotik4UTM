@@ -1,10 +1,14 @@
-
+ 
 module Randomish
 
+// 生成 MAC 地址
+// 使用种子、索引和前缀生成唯一的 MAC 地址
 function macAddress(seed: String, index: UInt16, prefix : "2"|"6"|"a"|"e") = 
   let (s = "\(seed)\(index)\(prefix)".sha1.take(10)) 
     "0\(prefix):\(s[0])\(s[1]):\(s[2])\(s[3]):\(s[4])\(s[5]):\(s[6])\(s[7]):\(s[8])\(s[9])"
 
+// 从 random.org 获取随机序列
+// 用于生成高质量的随机数据
 function webRandom(length : UInt(this < 512)) = 
   read("https://www.random.org/sequences/?min=10&max=99&col=1000&format=plain&rnd=new")
     .text
@@ -15,9 +19,13 @@ function webRandom(length : UInt(this < 512)) =
     )
     .replaceAll("\t","")
 
+// 生成 UUID
+// 基于随机数和备用盐值生成唯一标识符
 function hashUUID(altsalt : Number(this <= 9999)) = 
   "\(webRandom(8))-\(altsalt.toString().padStart(4,"0"))-\(webRandom(4))-\(webRandom(4))-\(webRandom(12))"
 
+// 从 uuidgenerator.net 获取 UUID
+// 使用备用盐值生成版本 4 UUID
 function webUUID(altsalt : Number?) = 
   read("https://www.uuidgenerator.net/api/version4?altsalt=\(altsalt ?? "nothing")")
     .text

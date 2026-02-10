@@ -1,28 +1,33 @@
 module UTM
+// 导入随机数生成模块
 import "Randomish.pkl"
 
-typealias SystemArchitecture = "x86_64" | "aarch64"
-typealias BackendType = "QEMU" | "Apple"
-typealias NetworkMode = "Shared" | "Bridged"
-typealias CPUCount = UInt(this <= 64)
+// 类型别名定义
+typealias SystemArchitecture = "x86_64" | "aarch64"  // 系统架构：x86_64 或 aarch64
+typealias BackendType = "QEMU" | "Apple"            // 虚拟化后端类型
+typealias NetworkMode = "Shared" | "Bridged"         // 网络模式
+typealias CPUCount = UInt(this <= 64)               // CPU 数量，最大 64
 
-hidden defaultCPUCount = 0
-hidden defaultMemSize = 1024
-hidden defaultNotes = "Packaged by `pkl`"
+// 默认值定义
+hidden defaultCPUCount = 0           // 默认 CPU 数量（0 表示由 UTM 自动设置）
+hidden defaultMemSize = 1024         // 默认内存大小（1024 MB）
+hidden defaultNotes = "Packaged by `pkl`"  // 默认说明信息
 
-// CONFIG.PLIST
+// ============================================
+// UTM 配置文件（config.plist）主类
+// ============================================
 
 class Config {
-  Backend : BackendType
-  ConfigurationVersion : Int(this == 4) = 4
-  Display = new Listing {}
-  Drive = new Listing<Disk> {}
-  Information : Information
-  Input : QemuInput? = 
+  Backend : BackendType                    // 虚拟化后端类型
+  ConfigurationVersion : Int(this == 4) = 4  // 配置文件版本号
+  Display = new Listing {}                 // 显示配置
+  Drive = new Listing<Disk> {}            // 磁盘配置列表
+  Information : Information                // 虚拟机信息
+  Input : QemuInput? =                    // QEMU 输入配置
     if (Backend == "QEMU") new QemuInput {} 
     else null
-  Network : Listing<Network>
-  QEMU : QemuConfiguration? = 
+  Network : Listing<Network>              // 网络配置列表
+  QEMU : QemuConfiguration? =              // QEMU 特定配置
     if (Backend == "QEMU") 
       new QemuConfiguration {
         when (System.Architecture == "x86_64") { 
@@ -32,7 +37,7 @@ class Config {
         }
       }
     else null
-  Serial = 
+  Serial =                                 // 串口配置
     new Listing<Serial> {
       new SerialTerminal { 
         when (Backend == "QEMU") { 
@@ -40,172 +45,190 @@ class Config {
         } 
       }
     }
-  Sharing : QemuSharing? = 
+  Sharing : QemuSharing? =                // QEMU 共享配置
     if (Backend == "QEMU") new QemuSharing {} 
     else null
-  Sound : List? = 
+  Sound : List? =                        // 声音配置
     if (Backend == "QEMU") List() else null
-  System : System = 
+  System : System =                       // 系统配置
     if (Backend == "Apple") new AppleSystem {} 
     else new QemuSystem {}
-  Virtualization : AppleConfiguration? = 
+  Virtualization : AppleConfiguration? =   // Apple 虚拟化配置
     if (Backend == "Apple") new AppleConfiguration {} 
     else null
 }
 
-
-/// VM INFORMATION
+// ============================================
+// 虚拟机信息类
+// ============================================
 
 class Information {
-  Icon = "logo.svg"
-  IconCustom = true
-  Name : String
-  Notes = defaultNotes
-  UUID = Randomish.webUUID(0) 
+  Icon = "logo.svg"                       // 默认图标文件名
+  IconCustom = true                        // 是否使用自定义图标
+  Name : String                            // 虚拟机名称
+  Notes = defaultNotes                     // 说明信息
+  UUID = Randomish.webUUID(0)             // 唯一标识符
 }
 
-/// DISK
+// ============================================
+// 磁盘配置类
+// ============================================
 
 class Disk {
-    Identifier : String = Randomish.hashUUID(9999)
-    ImageName : String
-    Nvme : Boolean? = 
+    Identifier : String = Randomish.hashUUID(9999)  // 磁盘唯一标识符
+    ImageName : String                              // 镜像文件名
+    Nvme : Boolean? =                               // 是否使用 NVMe
       if (Backend == "Apple") true 
       else null
-    ImageType : String? = 
+    ImageType : String? =                           // 镜像类型
       if (Backend == "QEMU") "Disk" 
       else null
-    Interface : String? = 
+    Interface : String? =                           // 磁盘接口类型
       if (Backend == "QEMU") 
         if (Architecture == "x86_64")
           "VirtIO" 
         else
           "NVMe"
       else 
-        null // always null on Apple
-    InterfaceVersion : Int? = 
+        null
+    InterfaceVersion : Int? =                       // 接口版本
       if (Backend == "QEMU") 1
       else null
-    ReadOnly : Boolean = false
+    ReadOnly : Boolean = false                     // 是否只读
 
-    hidden Backend : BackendType?
-    hidden Architecture : SystemArchitecture?
+    hidden Backend : BackendType?                   // 隐藏字段：后端类型
+    hidden Architecture : SystemArchitecture?       // 隐藏字段：架构
 }
 
-/// NETWORK
+// ============================================
+// 网络配置类
+// ============================================
 
 class Network {
-  Hardware : String? = 
+  Hardware : String? =                       // 网络硬件类型
     if (Backend == "QEMU") "virtio-net-pci"
     else null
-  IsolateFromHost : Boolean? = 
+  IsolateFromHost : Boolean? =              // 是否隔离宿主机网络
     if (Backend == "QEMU") false 
     else null
-  MacAddress : String
-  Mode : NetworkMode = "Shared"
-  BridgeInterface: String(length > 0)?
-  PortForward : List? = 
+  MacAddress : String                        // MAC 地址
+  Mode : NetworkMode = "Shared"              // 网络模式
+  BridgeInterface: String(length > 0)?       // 桥接接口名称
+  PortForward : List? =                      // 端口转发列表
     if (Backend == "QEMU") List() 
     else null
 
-  hidden Backend : BackendType
+  hidden Backend : BackendType               // 隐藏字段：后端类型
 }
 
-
-/// "SYSTEM" - VM sizing and other hardware control
+// ============================================
+// 系统配置类（虚拟机大小和硬件控制）
+// ============================================
 
 abstract class System {
-  Architecture  : SystemArchitecture
+  Architecture  : SystemArchitecture        // 系统架构
 }
 
+// Apple 虚拟化系统配置
 class AppleSystem extends System {
-  Boot { 
-    EfiVariableStoragePath = "efi_vars.fd"
-    OperatingSystem = "Linux"
-    UEFIBoot = true
+  Boot {                                    // 启动配置
+    EfiVariableStoragePath = "efi_vars.fd" // EFI 变量存储路径
+    OperatingSystem = "Linux"              // 操作系统类型
+    UEFIBoot = true                        // 是否启用 UEFI 启动
   }
-  CPUCount : CPUCount = defaultCPUCount 
-  GenericPlatform = new { 
-    // TODO: UTM accepts this empty.  Many unknowns otherwise.  Also, <data> in .plist requires custom rendering
-    // machineIdentifier = "YnBsaXN0MDDRAQJUVVVJRE8QEGnFsjSoV07ZsaVqyAx0ncsICxAAAAAAAAABAQAAAAAAAAADAAAAAAAAAAAAAAAAAAAAIw=="
+  CPUCount : CPUCount = defaultCPUCount    // CPU 数量
+  GenericPlatform = new {                  // 通用平台配置
   }
-  MemorySize : Int = defaultMemSize
+  MemorySize : Int = defaultMemSize        // 内存大小
 }
 
+// QEMU 系统配置
 class QemuSystem extends System {
-  CPU = "default"
-  CPUCount : CPUCount = defaultCPUCount 
-  CPUFlagsAdd = List() // QEMU
-  CPUFlagsRemove = List() // QEMU
-  ForceMulticore = false // QEMU
-  JITCacheSize = 0
-  MemorySize : Int = defaultMemSize
-  Target = 
+  CPU = "default"                          // CPU 类型
+  CPUCount : CPUCount = defaultCPUCount    // CPU 数量
+  CPUFlagsAdd = List()                     // 添加的 CPU 标志
+  CPUFlagsRemove = List()                  // 移除的 CPU 标志
+  ForceMulticore = false                  // 是否强制多核
+  JITCacheSize = 0                         // JIT 缓存大小
+  MemorySize : Int = defaultMemSize       // 内存大小
+  Target =                                 // QEMU 目标机器类型
     if (this.Architecture == "aarch64") "virt" 
     else "q35"
 }
 
-/// SERIAL PORT
-//    TODO: additonal stty, and other serial class
+// ============================================
+// 串口配置类
+// ============================================
 
 abstract class Serial {
-  Mode : String
+  Mode : String                            // 串口模式
 }
 
+// 终端串口配置
 class SerialTerminal extends Serial {
-  Mode = "Terminal"
-  Target : String?
-  Terminal {
-    BackgroundColor = "#000000"
-    CursorBlink = true
-    Font = "Menlo"
-    FontSize = 12
-    ForegroundColor = "#ffffff"
+  Mode = "Terminal"                       // 模式为终端
+  Target : String?                         // 目标设备
+  Terminal {                               // 终端显示配置
+    BackgroundColor = "#000000"           // 背景颜色
+    CursorBlink = true                    // 光标闪烁
+    Font = "Menlo"                        // 字体
+    FontSize = 12                         // 字号
+    ForegroundColor = "#ffffff"          // 前景颜色
   }
 }
 
+// 伪终端串口配置
 class PttyTerminal extends Serial {
-  Mode = "Ptty"
-  Target : "Auto"?
+  Mode = "Ptty"                            // 模式为伪终端
+  Target : "Auto"?                          // 自动目标
 }
 
-/// "CONFIGURATION" - essentially "guest" features 
-///   NOTE: EITHER: Virtualization or QEMU in .plist
+// ============================================
+// 虚拟机功能配置类
+// ============================================
 
 abstract class SystemConfiguration {}
 
+// Apple 虚拟化功能配置
 class AppleConfiguration extends SystemConfiguration {
-    Audio = false
-    Balloon = true
-    ClipboardSharing = false
-    Entropy = true
-    Keyboard = "Disabled"
-    Pointer = "Disabled"
+    Audio = false                          // 音频
+    Balloon = true                        // 内存气球
+    ClipboardSharing = false             // 剪贴板共享
+    Entropy = true                        // 熵源
+    Keyboard = "Disabled"                 // 键盘
+    Pointer = "Disabled"                   // 指针设备
 }
 
+// QEMU 功能配置
 class QemuConfiguration extends SystemConfiguration { 
-    AdditionalArguments = List()
-    BalloonDevice = false
-    DebugLog = false
-    Hypervisor = false
-    PS2Controller = false
-    RNGDevice = false
-    RTCLocalTime = false
-    TPMDevice = false
-    TSO = false
-    UEFIBoot = true
+    AdditionalArguments = List()           // 额外参数
+    BalloonDevice = false                 // 气球设备
+    DebugLog = false                      // 调试日志
+    Hypervisor = false                    // 虚拟机监控器
+    PS2Controller = false                 // PS2 控制器
+    RNGDevice = false                     // 随机数生成器
+    RTCLocalTime = false                 // RTC 本地时间
+    TPMDevice = false                     // TPM 设备
+    TSO = false                           // TCP 分段卸载
+    UEFIBoot = true                       // UEFI 启动
 }
 
-/// QEMU THINGS
+// ============================================
+// QEMU 共享配置类
+// ============================================
 
 class QemuSharing { 
-    ClipboardSharing = false
-    DirectoryShareMode = "None"
-    DirectoryShareReadOnly = false
+    ClipboardSharing = false              // 剪贴板共享
+    DirectoryShareMode = "None"           // 目录共享模式
+    DirectoryShareReadOnly = false         // 目录共享只读
 }
 
+// ============================================
+// QEMU 输入配置类
+// ============================================
+
 class QemuInput { 
-  MaximumUsbShare = 3
-  UsbBusSupport = "3.0"
-  UsbSharing = false
+  MaximumUsbShare = 3                    // 最大 USB 共享数
+  UsbBusSupport = "3.0"                  // USB 总线支持
+  UsbSharing = false                     // USB 共享
 }

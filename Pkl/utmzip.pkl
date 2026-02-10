@@ -1,49 +1,58 @@
 open module utmzip
+// 导入随机数生成、UTM 配置、URL 和 SVG 图标模块
 import "Randomish.pkl"
 import "UTM.pkl"
 import "URL.pkl"
 import "SVG.pkl"
 
-name : String
+// UTM 虚拟机包基础属性定义
+name : String  // 虚拟机名称
 
-backend : UTM.BackendType
+backend : UTM.BackendType  // 虚拟化后端类型（QEMU 或 Apple）
 
-architecture : UTM.SystemArchitecture
+architecture : UTM.SystemArchitecture  // 系统架构（x86_64 或 aarch64）
 
-memory : DataSize = UTM.defaultMemSize
+memory : DataSize = UTM.defaultMemSize  // 内存大小，默认为 1024 MB
 
-cpus : UTM.CPUCount = UTM.defaultCPUCount
+cpus : UTM.CPUCount = UTM.defaultCPUCount  // CPU 数量，默认为 0（由 UTM 自动设置）
 
-imageDownloadUrl : URL.Download
+imageDownloadUrl : URL.Download  // 系统镜像下载 URL
 
-additionalDisks : List<DataSize>
+additionalDisks : List<DataSize>  // 额外磁盘列表
 
-notes : String = UTM.defaultNotes
+notes : String = UTM.defaultNotes  // 虚拟机说明信息
 
-logoSvg : SVG.Icon = new SVG.Pkl {} 
+logoSvg : SVG.Icon = new SVG.Pkl {}  // 虚拟机图标，默认为 Pkl 图标
 
+// UTM 配置文件（config.plist）内容定义
 configPlist : UTM.Config = new {
 
+  // 后端类型设置
   Backend = backend
   
+  // 系统配置：架构、内存、CPU
   System {
     Architecture = architecture
     MemorySize = memory.toUnit("mib").value
     CPUCount = cpus
   }
   
+  // 虚拟机信息：名称、图标、说明
   Information {
     Name = name
     Notes = notes
     Icon = logoSvg.name
   }
   
+  // 磁盘配置
   Drive {
+    // 主磁盘（系统镜像）
     new {
       Backend = backend
       Architecture = architecture
       ImageName = imageDownloadUrl.filename
     }
+    // 额外磁盘
     for (_index in additionalDisks.mapIndexed((i,e)->Pair(i,e))) {
       new {
         Identifier = Randomish.hashUUID(_index.first)
@@ -54,15 +63,15 @@ configPlist : UTM.Config = new {
     }
   }
   
+  // 网络配置
   Network {
     new {
       MacAddress = Randomish.macAddress(name, 0, if (backend == "Apple") "a" else "e")
       Backend = backend
-      // example to control QEMU network card: 
-      // Hardware = if (backend == "QEMU" && architecture == "x86_64") "e1000" else null
     } 
   }
   
+  // 串口配置
   Serial {
     new UTM.PttyTerminal {
       when (backend == "QEMU") { Target = "Auto" }
@@ -70,34 +79,35 @@ configPlist : UTM.Config = new {
   }
 }
 
-// NOTE: `output` below uses "multiple file output" so a `-m <outdir>` is needed in "pkl eval"
-
+// 输出配置
+// 使用多文件输出模式，需要在 pkl eval 时使用 -m <outdir> 参数指定输出目录
 output {
 
   files {
 
-    // required: config.plist
+    // 必需文件：config.plist（UTM 虚拟机配置文件）
     ["\(name).utm/config.plist"] {
         value = configPlist
         renderer = new PListRenderer {}
     }
     
-    // store Pkl PCF format in package 
+    // 保存 Pkl PCF 格式的配置文件
     ["\(name).utm/config.pkl"] {
         value = configPlist
         renderer = new PcfRenderer {}
     }
     
-    // logo
+    // 虚拟机图标文件
     ["\(name).utm/Data/\(logoSvg.name)"] {
         text = logoSvg.text
     }
     
-    // required: a ".url" file with VM disk image download URL
+    // 必需文件：.url 文件（包含镜像下载链接）
     ["\(name).utm/Data/\(imageDownloadUrl.name).url"] {
         text = imageDownloadUrl.url
     }
     
+    // 当有额外磁盘时，添加磁盘大小文件
     when (additionalDisks.length > 0) {
       for ( _pair in additionalDisks.mapIndexed((i,e) -> Pair(i,e))) {
         ["\(name).utm/Data/qdisk\(_pair.first).size"] { 
@@ -106,12 +116,13 @@ output {
       }
     }
     
+    // Apple 虚拟化需要 EFI 变量文件
     when (backend == "Apple") {
       ["\(name).utm/Data/efi_vars.fd.localcp"] { 
         text = "efi_vars.fd" 
       }
     }
 
-  } // files
+  } // files 结束
 
-} // output
+} // output 结束

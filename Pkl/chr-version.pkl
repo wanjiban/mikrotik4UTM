@@ -1,16 +1,17 @@
 import "CHR.pkl"
 
-/// chr-version.pkl
-///   - outputs RouterOS version as string, from a "release channel" like "stable" or "testing"
-///   - for use from shell: `pkl eval ./Pkl/chr.version.pkl`
-///   - default is stable/x86, use env vars to change: 
-///       UTM_ARCHITECTURE=aarch64 CHR_VERSION=7.18.1 pkl eval ./Pkl/chr.version.pkl
+// chr-version.pkl
+// 功能：输出 RouterOS 版本号字符串
+// 从发布通道（如 "stable" 或 "testing"）获取版本号
+// 从 Shell 调用方式：`pkl eval ./Pkl/chr.version.pkl`
+// 默认使用 stable/x86，可通过环境变量修改：
+//     UTM_ARCHITECTURE=aarch64 CHR_VERSION=7.18.1 pkl eval ./Pkl/chr.version.pkl
 
-// inputs from environment variables
-hidden channel : String = read?("env:CHR_VERSION") ?? "stable"
-hidden arch : String = read?("env:UTM_ARCHITECTURE") ?? "x86_64"
+// 从环境变量读取配置
+hidden channel : String = read?("env:CHR_VERSION") ?? "stable"  // 版本通道，默认 stable
+hidden arch : String = read?("env:UTM_ARCHITECTURE") ?? "x86_64"  // 架构，默认 x86_64
 
-// output plain text with just version like "7.19beta4"
+// 输出纯文本版本号，如 "7.19beta4"
 output {
   text = 
    new CHR.RouterOSVersion { 

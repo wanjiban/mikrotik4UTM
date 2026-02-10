@@ -16,7 +16,9 @@ notes = """
 \(name)
 MikroTik RouterOS CHR (Patched) for UTM's \(backend) Virtualization on \(architecture).
 
-使用 mikrotik.ltd 提供的已修补镜像。
+WANJIBAN 项目 mikrotik4UTM 使用 mikrotik.ltd 提供的已修补镜像。
+
+
 
 默认用户名是 'admin'，无密码。
 

@@ -2,19 +2,23 @@
 
 ## 项目概述
 
-本项目用于自动化构建 UTM 虚拟机镜像包，使用 Pkl 语言定义虚拟机配置，从 MikroTik 官方或镜像源下载 RouterOS 系统镜像，最终生成可直接导入 UTM 的 `.utm` 虚拟机包。
+本项目用于自动化构建 UTM 虚拟机镜像包，使用 Pkl 语言定义虚拟机配置，从 MikroTik 官方下载 RouterOS 系统镜像，最终生成可直接导入 UTM 的 `.utm` 虚拟机包。
 
 ## 核心原理
 
 ### 1. Pkl 语言简介
+
 Pkl 是一种配置即代码语言，支持：
+
 - 类型安全的配置定义
 - 模块化和继承机制
 - 多文件输出支持
 - 丰富的内置类型（DataSize、UUID 等）
 
 ### 2. UTM 虚拟机包结构
+
 UTM 虚拟机是一个以 `.utm` 为后缀的包文件夹，包含：
+
 ```
 <虚拟机名称>.utm/
 ├── config.plist      # UTM 配置文件（XML 格式）
@@ -27,12 +31,13 @@ UTM 虚拟机是一个以 `.utm` 为后缀的包文件夹，包含：
 ```
 
 ### 3. 固件下载流程
+
 1. `CHR.pkl` 中的 `RouterOSVersion` 类定义版本信息
-2. 从 `mikrotik.ltd` 获取指定通道的最新版本号
-3. 从 `elseif/MikroTikPatch` releases 下载预构建镜像
+2. 从 `upgrade.mikrotik.com/routeros/NEWESTa7.<channel>` 获取指定通道的最新版本号
+3. 从 `download.mikrotik.com` 下载官方 RouterOS CHR 镜像
 4. 镜像类型包括：
    - `chr-<版本>.img.zip` - UEFI 模式镜像
-   - `chr-<版本>-legacy-bios.*.zip` - 传统 BIOS 模式镜像
+   - `chr-<版本>-<arch>.img.zip` - 带架构后缀的镜像
 
 ## 项目结构
 
@@ -64,28 +69,36 @@ mikropkl/
 ## 构建流程
 
 ### 1. 环境准备
+
 ```bash
 # macOS/Linux
 brew install pkl      # 安装 Pkl 编译器
 brew install qemu-img  # 安装 QEMU 工具（可选，用于额外磁盘）
+brew install wget     # 下载工具
 ```
 
 ### 2. 本地构建
+
 ```bash
-git clone <仓库地址>
+git clone https://github.com/tikoci/mikropkl
 cd mikropkl
+git checkout pkl
 make              # 构建所有虚拟机
 ```
 
 ### 3. 环境变量配置
+
 ```bash
-# 指定 RouterOS 版本
-export CHR_VERSION=7.20.8
+# 指定 RouterOS 版本或通道
+export CHR_VERSION=stable      # stable, long-term, testing, development, upgrade
+# 或指定具体版本号
+# export CHR_VERSION=7.15.3
 # 指定架构
 export UTM_ARCHITECTURE=aarch64
 ```
 
 ### 4. GitHub Actions 自动构建
+
 - 触发条件：推送到 main 或 pkl 分支，或创建 git tag
 - 构建产物：`.zip` 文件包含 `.utm` 包
 - 发布位置：GitHub Releases
@@ -93,53 +106,63 @@ export UTM_ARCHITECTURE=aarch64
 ## 虚拟机类型说明
 
 ### 1. CHR（Cloud Hosted Router）
+
 - 标准 RouterOS CHR 虚拟机
 - 无额外磁盘
 - 适用于一般路由功能测试
 
 ### 2. ROSE（RouterOS Storage Edition）
+
 - 基于 CHR，增加了 4 个 10GB 虚拟磁盘
 - 用于测试 RouterOS 存储功能（RAID、BTRFS 等）
 - 默认磁盘处于未格式化状态
 
 ### 3. 架构支持
+
 | 架构 | QEMU | Apple | 说明 |
 |------|------|-------|------|
 | x86_64 | ✅ | ✅ | 64位 Intel/AMD |
 | aarch64 | ✅ | ❌ | 64位 ARM（Apple Silicon） |
 
 ### 4. 虚拟化后端
+
 - **QEMU**：支持更广泛的设备和功能，包括额外磁盘、网络配置等
 - **Apple**：使用 Apple Virtualization Framework，启动更快，但功能受限
 
 ## 注意事项
 
 ### 1. 许可证限制
+
 - 免费版 CHR 限速 1Mb/s
 - 可通过注册 MikroTik 账号获取试用许可证（10Gb/s）
 - 付费许可证可解除所有限制
 
 ### 2. 网络配置
+
 - **Shared 模式**：NAT 转发，虚拟机可访问互联网
 - **Bridged 模式**：桥接到物理网卡，获取独立 IP
 - Apple 虚拟化不支持端口转发，需要 Bridged 模式暴露服务
 
 ### 3. 版本兼容性
+
 - RouterOS 6.x 仅支持 x86 架构
 - RouterOS 7.x 支持 x86 和 ARM64
 - 较新的功能可能需要特定版本
 
 ### 4. 构建注意事项
+
 - 每次 `make` 会重新下载所有镜像
 - 本地构建产物在 `./Machines` 目录
 - GitHub Actions 构建产物在 Releases 页面
 
 ### 5. 镜像下载
-- 优先使用 `elseif/MikroTikPatch` 镜像源
-- 版本检查使用 `mikrotik.ltd`
+
+- 使用 MikroTik 官方镜像源 `download.mikrotik.com`
+- 版本检查使用 `upgrade.mikrotik.com/routeros/NEWESTa7.<channel>`
 - 国内用户建议配置代理或使用国内镜像
 
 ### 6. Apple 虚拟化特殊要求
+
 - 需要 macOS 13+ (Ventura) 或更高版本
 - 需要 Apple Silicon Mac（M1/M2/M3）
 - 需要 `efi_vars.fd` 文件
@@ -147,18 +170,22 @@ export UTM_ARCHITECTURE=aarch64
 ## 常见问题
 
 ### Q: 构建失败怎么办？
-A: 检查网络连接，确认可以访问 GitHub 和 mikrotik.ltd
+
+A: 检查网络连接，确认可以访问 GitHub 和 mikrotik.com
 
 ### Q: 虚拟机无法启动？
-A: 
+
+A:
 1. 检查 UTM 版本是否支持
 2. 确认镜像下载完整
 3. 查看系统日志
 
 ### Q: 如何更新到新版本？
+
 A: 修改 `CHR_VERSION` 环境变量，重新构建
 
 ### Q: ROSE 磁盘如何使用？
+
 A: 参考 README 中的 ROSE 使用说明，进行格式化和挂载
 
 ## 参考链接
@@ -166,4 +193,4 @@ A: 参考 README 中的 ROSE 使用说明，进行格式化和挂载
 - [Pkl 官方文档](https://pkl-lang.org)
 - [UTM 文档](https://docs.getutm.app)
 - [RouterOS 文档](https://help.mikrotik.com/docs)
-- [MikroTikPatch 项目](https://github.com/elseif/MikroTikPatch)
+- [MikroTik 官方下载](https://mikrotik.com/download)

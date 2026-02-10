@@ -1,17 +1,20 @@
 # MikroTik RouterOS UTM 虚拟机构建工具
 
-## 项目概述
+> 使用 Pkl 配置即代码语言自动化构建 UTM 虚拟机包
 
-本项目通过 Pkl 配置语言自动化构建 UTM 虚拟机包，支持从 MikroTik 官方源或 mikrotik.ltd 镜像源下载 RouterOS CHR 镜像，生成可直接导入 UTM 的 `.utm` 虚拟机包。
+## 关于本项目
 
-主要特性：
+本项目用于从零构建 UTM 虚拟机镜像。通过 Pkl 语言定义虚拟机配置，从 MikroTik 官方或第三方镜像源下载 RouterOS CHR 镜像，自动生成可直接导入 UTM 的 `.utm` 虚拟机包。
 
-- **自动化构建**：通过 Pkl 语言定义虚拟机配置，自动生成 UTM 所需的所有文件
-- **双镜像源支持**：官方源 + 已修补源（mikrotik.ltd），满足不同需求
-- **多架构支持**：x86_64 (Intel/AMD) 和 aarch64 (Apple Silicon)
-- **多后端支持**：QEMU 和 Apple Virtualization Framework
-- **定时任务**：自动检测上游版本更新并触发构建
-- **智能清理**：自动清理失败的 workflow 运行记录
+### 核心特性
+
+| 特性 | 说明 |
+|------|------|
+| **双镜像源** | 官方源 + mikrotik.ltd 已修补源 |
+| **多架构** | x86_64 (Intel/AMD) / aarch64 (Apple Silicon) |
+| **多后端** | QEMU / Apple Virtualization |
+| **自动更新** | 每日检测上游版本，自动触发构建 |
+| **零配置** | 本地一行命令构建，GitHub Actions 自动发布 |
 
 ## 核心原理
 

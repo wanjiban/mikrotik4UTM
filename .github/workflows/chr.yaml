@@ -53,7 +53,9 @@ jobs:
       - name: Set RouterOS version, based on dispatch_workflow version
         id: get-routeros-version
         run: |
-          echo "version=`CHR_VERSION=${{ github.event.inputs.version }} pkl eval ./Pkl/chr-version.pkl`" >> $GITHUB_OUTPUT
+          CHR_VERSION="${{ github.event.inputs.version }}"
+          VERSION=$(pkl eval ./Pkl/chr-version.pkl)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
       - name: Build using Makefile
         id: make
         run: |

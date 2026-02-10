@@ -39,43 +39,100 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  check-upstream:
+  check-official:
     runs-on: ubuntu-latest
     outputs:
       updated: ${{ steps.check.outputs.updated }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
-      - name: Check upstream version
+
+      - name: Check official upstream version
         id: check
         run: |
-          # 获取本地记录的版本
-          LOCAL_VERSION=$(cat .upstream_version 2>/dev/null || echo "")
-          
-          # 从mikrotik.ltd获取最新stable版本
-          REMOTE_VERSION=$(curl -s https://upgrade.mikrotik.ltd/routeros/NEWESTa7.stable | cut -d' ' -f1)
-          
-          echo "Local version: $LOCAL_VERSION"
-          echo "Remote version: $REMOTE_VERSION"
-          
+          # 获取本地记录的官方版本
+          LOCAL_VERSION=$(cat .official_version 2>/dev/null || echo "")
+
+          # 从 MikroTik 官方获取最新 stable 版本
+          REMOTE_VERSION=$(curl -s https://upgrade.mikrotik.com/routeros/NEWESTa7.stable | cut -d' ' -f1)
+
+          echo "Local official version: $LOCAL_VERSION"
+          echo "Remote official version: $REMOTE_VERSION"
+
           if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ] && [ -n "$REMOTE_VERSION" ]; then
             echo "updated=true" >> $GITHUB_OUTPUT
-            echo "$REMOTE_VERSION" > .upstream_version
+            echo "$REMOTE_VERSION" > .official_version
           else
             echo "updated=false" >> $GITHUB_OUTPUT
           fi
-      
+
       - name: Commit updated version
         if: steps.check.outputs.updated == 'true'
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git add .upstream_version
-          git commit -m "chore: update upstream version to $(cat .upstream_version)"
+          git add .official_version
+          git commit -m "chore: update official upstream version to $(cat .official_version)"
           git push
-      
-      - name: Trigger patched workflow
+
+      - name: Trigger official chr workflow
+        if: steps.check.outputs.updated == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'chr.yaml',
+              ref: context.ref,
+              inputs: {
+                version: 'stable',
+                pklversion: '0.30.2',
+                makefileflags: '-d',
+                tagprefix: 'chr-',
+                releaseprefix: 'CHR'
+              }
+            });
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  check-patched:
+    runs-on: ubuntu-latest
+    outputs:
+      updated: ${{ steps.check.outputs.updated }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check patched upstream version
+        id: check
+        run: |
+          # 获取本地记录的 patched 版本
+          LOCAL_VERSION=$(cat .patched_version 2>/dev/null || echo "")
+
+          # 从 mikrotik.ltd 获取最新 stable 版本
+          REMOTE_VERSION=$(curl -s https://upgrade.mikrotik.ltd/routeros/NEWESTa7.stable | cut -d' ' -f1)
+
+          echo "Local patched version: $LOCAL_VERSION"
+          echo "Remote patched version: $REMOTE_VERSION"
+
+          if [ "$LOCAL_VERSION" != "$REMOTE_VERSION" ] && [ -n "$REMOTE_VERSION" ]; then
+            echo "updated=true" >> $GITHUB_OUTPUT
+            echo "$REMOTE_VERSION" > .patched_version
+          else
+            echo "updated=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit updated version
+        if: steps.check.outputs.updated == 'true'
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add .patched_version
+          git commit -m "chore: update patched upstream version to $(cat .patched_version)"
+          git push
+
+      - name: Trigger patched chr workflow
         if: steps.check.outputs.updated == 'true'
         uses: actions/github-script@v7
         with:
@@ -92,19 +149,23 @@ jobs:
                 tagprefix: 'chr-patched-',
                 releaseprefix: 'CHR-PATCHED'
               }
-            })
+            });
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   notify:
     runs-on: ubuntu-latest
-    needs: [cleanup, check-upstream]
+    needs: [cleanup, check-official, check-patched]
     if: always()
     steps:
       - name: Report status
         run: |
           echo "Cleanup: ${{ needs.cleanup.result }}"
-          echo "Check upstream: ${{ needs.check-upstream.result }}"
-          if [ "${{ needs.check-upstream.outputs.updated }}" == "true" ]; then
-            echo "Triggered patched workflow for new version"
+          echo "Check official: ${{ needs.check-official.result }}"
+          echo "Check patched: ${{ needs.check-patched.result }}"
+          if [ "${{ needs.check-official.outputs.updated }}" == "true" ]; then
+            echo "Triggered official chr workflow for new version"
+          fi
+          if [ "${{ needs.check-patched.outputs.updated }}" == "true" ]; then
+            echo "Triggered patched chr workflow for new version"
           fi

@@ -18,9 +18,17 @@ PKL_FILES_DIR := Files
 
 # machine specific properties
 CHR_VERSION ?= stable
+PKL_PATCHED ?= false
 
 # options for `pkl` build
 # PKL_OPTIONS := -e chrVersion=$(CHR_VERSION)
+
+# Patched manifests
+ifeq ($(PKL_PATCHED),true)
+  PKL_MANIFESTS := $(wildcard ./Manifests/chr_patched_*.pkl ./Manifests/rose_patched_*.pkl)
+else
+  PKL_MANIFESTS := $(wildcard ./Manifests/*.pkl)
+endif
 
 
 all: prereq phase1 
@@ -43,7 +51,7 @@ phase1: pkl
 	$(MAKE) phase2
 pkl:
 	$(info running pkl)
-	pkl eval ./$(PKL_RUN_DIR)/*.pkl $(PKL_OPTIONS) -m ./$(PKL_OUTPUT_DIR)
+	pkl eval $(PKL_MANIFESTS) $(PKL_OPTIONS) -m ./$(PKL_OUTPUT_DIR)
 
 # NOTES:  This Makefile is recursive. `pkl` is run first which produces
 #	      some placeholder files like .url, then `make` is run again

@@ -1,0 +1,5 @@
+// ROSE Patched aarch64 manifest
+amends "../Templates/rose_patched_utmzip.pkl"
+import "../Pkl/Patched.pkl"
+
+architecture = "aarch64"

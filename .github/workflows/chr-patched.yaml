@@ -70,7 +70,7 @@ jobs:
       - name: Build using Makefile
         id: make
         run: |
-          make ${{ github.event.inputs.makefileflags }} CHR_VERSION=${{ steps.get-routeros-version.outputs.version }}
+          make ${{ github.event.inputs.makefileflags }} CHR_VERSION=${{ steps.get-routeros-version.outputs.version }} PKL_PATCHED=true
       - name: Store /Machines directory .utm machines built
         id: outputdirs
         run: |

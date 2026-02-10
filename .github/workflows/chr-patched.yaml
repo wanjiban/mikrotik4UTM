@@ -66,7 +66,8 @@ jobs:
           else
             REMOTE_VERSION="$VERSION"
           fi
-          echo "content=$(curl -s "https://upgrade.mikrotik.ltd/routeros/${REMOTE_VERSION}/CHANGELOG" | head -100 | jq -Rs '.')" >> $GITHUB_OUTPUT || echo "content=$(echo '无可用更新日志')" >> $GITHUB_OUTPUT
+          CHANGELOG=$(curl -s "https://upgrade.mikrotik.ltd/routeros/${REMOTE_VERSION}/CHANGELOG" 2>/dev/null | head -50 | sed 's/"/\\"/g' | tr '\n' ' ')
+          echo "content=$CHANGELOG" >> $GITHUB_OUTPUT
       - name: Build using Makefile
         id: make
         run: |
@@ -84,8 +85,10 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git tag ${{ github.event.inputs.tagprefix }}${{ steps.get-routeros-version.outputs.version }}
-          git push origin ${{ github.event.inputs.tagprefix }}${{ steps.get-routeros-version.outputs.version }}
+          TAG="${{ github.event.inputs.tagprefix }}${{ steps.get-routeros-version.outputs.version }}"
+          git tag "$TAG"
+          git push origin ":refs/tags/$TAG" 2>/dev/null || true
+          git push origin "$TAG"
   release:
     runs-on: ubuntu-latest
     needs: build

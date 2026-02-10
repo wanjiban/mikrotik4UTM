@@ -1,3 +1,8 @@
-module patchedversion
+import "Patched.pkl"
 
-chrVersion: String = read?("env:CHR_VERSION") ?? "stable"
+channel : String = read?("env:CHR_VERSION") ?? "stable"
+arch : String = read?("env:UTM_ARCHITECTURE") ?? "x86_64"
+
+output {
+  text = new Patched.PatchedVersion { name = channel; arch = arch }._resolvedVersion.trim()
+}

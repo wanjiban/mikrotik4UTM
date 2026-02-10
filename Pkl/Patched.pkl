@@ -1,8 +1,8 @@
-module LTD
+module Patched
 
 import "./URL.pkl"
 
-class LTDVersion {
+class PatchedVersion {
   name: String
   arch: "x86_64" | "aarch64"
   product: "chr" = "chr"
@@ -18,8 +18,8 @@ class LTDVersion {
   version: String = name
 }
 
-class LTDIcon {
-  name: String = "mikrotik_ltd.svg"
+class PatchedIcon {
+  name: String = "mikrotik_patched.svg"
   text: String = """
   <?xml version="1.0" encoding="UTF-8"?>
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 41.83 44.62">

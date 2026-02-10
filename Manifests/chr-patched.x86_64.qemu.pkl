@@ -1,0 +1,10 @@
+// Patched CHR manifest
+amends "../Templates/chr-patched.utmzip.pkl"
+import "../Pkl/Patched.pkl"
+
+backend = "QEMU"
+architecture = "x86_64"
+
+logoSvg = new Patched.PatchedIcon {
+  style = "solid"
+}

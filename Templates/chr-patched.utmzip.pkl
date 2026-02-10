@@ -1,14 +1,14 @@
-open module chr-ltd.utmzip
+open module chr-patched.utmzip
 extends "../Pkl/utmzip.pkl"
-import "../Pkl/LTD.pkl"
+import "../Pkl/Patched.pkl"
 
 name = baseName
-baseName = "chr-ltd.\(architecture).\(backend.toLowerCase()).\(ltdVersion.version)"
+baseName = "chr-patched.\(architecture).\(backend.toLowerCase()).\(patchedVersion.version)"
 
 cpus = 2
 memory = 1.gib
 
-imageDownloadUrl = ltdVersion.downloadUrl
+imageDownloadUrl = patchedVersion.downloadUrl
 
 additionalDisks: List<DataSize> = List()
 
@@ -23,9 +23,9 @@ MikroTik RouterOS CHR (Patched) for UTM's \(backend) Virtualization on \(archite
 更多信息请参阅 https://mikrotik.ltd/
 """
 
-logoSvg = new LTD.LTDIcon {}
+logoSvg = new Patched.PatchedIcon {}
 
-ltdVersion: LTD.LTDVersion = new LTD.LTDVersion {
+patchedVersion: Patched.PatchedVersion = new Patched.PatchedVersion {
   name = read?("env:CHR_VERSION") ?? "stable"
   arch = outer.architecture
     .replaceAll("x86_64","x86_64")

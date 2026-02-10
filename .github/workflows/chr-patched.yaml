@@ -1,4 +1,4 @@
-name: CHR LTD Packages
+name: CHR Patched Packages
 permissions: write-all
 
 on:
@@ -20,12 +20,12 @@ on:
         description: 'Makefile options'
         required: true
       tagprefix:
-        default: "chr-ltd-"
+        default: "chr-patched-"
         type: string
         description: 'Prefix to use in git tag'
         required: true
       releaseprefix:
-        default: "CHR-LTD"
+        default: "CHR-PATCHED"
         type: string
         description: 'Prefix to use in release name'
         required: true
@@ -49,10 +49,10 @@ jobs:
           chmod +x pkl
           ./pkl --version
           cp ./pkl /usr/local/bin
-      - name: Set RouterOS LTD version
+      - name: Set RouterOS Patched version
         id: get-routeros-version
         run: |
-          echo "version=`CHR_VERSION=${{ github.event.inputs.version }} pkl eval ./Pkl/ltd-version.pkl`" >> $GITHUB_OUTPUT
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
       - name: Build using Makefile
         id: make
         run: |
@@ -64,7 +64,7 @@ jobs:
       - name: Produce Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Machines-LTD
+          name: Machines-Patched
           path: ./Machines
       - name: Push git tag
         run: |
@@ -88,7 +88,7 @@ jobs:
           tag_name: ${{ github.event.inputs.tagprefix }}${{ needs.build.outputs.chr-version }}
           release_name: ${{ github.event.inputs.releaseprefix }} ${{ needs.build.outputs.chr-version }}
           body: |
-            UTM virtual machines with RouterOS CHR (LTD Patched) ${{ needs.build.outputs.chr-version }}
+            UTM virtual machines with RouterOS CHR (Patched) ${{ needs.build.outputs.chr-version }}
             built using `pkl` ${{ github.event.inputs.pklversion }}
 
             Source: https://mikrotik.ltd/
@@ -110,7 +110,7 @@ jobs:
       - name: Get all machines
         uses: actions/download-artifact@v4
         with:
-          name: Machines-LTD
+          name: Machines-Patched
       - name: Create ZIP for ${{ matrix.machine}}
         id: rename
         run: |
@@ -168,7 +168,7 @@ jobs:
             assuming [UTM](https://mac.getutm.app) is installed, the folder ending in `.utm`
             will launch in UTM, like any other macOS "document".
 
-            ### About LTD Patched Images
+            ### About Patched Images
 
             These images are provided by [mikrotik.ltd](https://mikrotik.ltd/) and include:
             - Patched public key for full functionality

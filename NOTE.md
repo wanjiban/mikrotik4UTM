@@ -56,17 +56,17 @@ UTM 虚拟机是一个以 `.utm` 为后缀的包文件夹，包含：
 mikropkl/
 ├── Pkl/                    # 核心 Pkl 模块
 │   ├── CHR.pkl            # RouterOS 官方版本和图标定义
-│   ├── LTD.pkl            # RouterOS LTD（已修补）版本定义
+│   ├── Patched.pkl        # RouterOS 已修补版本定义
 │   ├── URL.pkl            # 下载资源类定义
 │   ├── SVG.pkl            # SVG 图标基类
 │   ├── UTM.pkl            # UTM 配置类型定义
 │   ├── Randomish.pkl      # 随机数据生成工具
 │   ├── utmzip.pkl         # UTM 包生成核心逻辑
 │   ├── chr-version.pkl     # 官方版本查询脚本
-│   └── ltd-version.pkl     # LTD 版本查询脚本
+│   └── patched-version.pkl     # 已修补版本查询脚本
 ├── Templates/              # 虚拟机模板
 │   ├── chr.utmzip.pkl     # CHR 虚拟机模板（官方）
-│   ├── chr-ltd.utmzip.pkl # CHR 虚拟机模板（LTD）
+│   ├── chr-patched.utmzip.pkl # CHR 虚拟机模板（已修补）
 │   └── rose.chr.utmzip.pkl # ROSE 虚拟机模板（带额外磁盘）
 ├── Manifests/             # 虚拟机清单（具体配置）
 │   ├── chr.x86_64.qemu.pkl
@@ -74,8 +74,8 @@ mikropkl/
 │   ├── chr.x86_64.apple.pkl
 │   ├── rose.chr.x86_64.qemu.pkl
 │   ├── rose.chr.aarch64.qemu.pkl
-│   ├── chr-ltd.x86_64.qemu.pkl   # LTD 版本清单
-│   └── chr-ltd.aarch64.qemu.pkl  # LTD 版本清单
+│   ├── chr-patched.x86_64.qemu.pkl   # 已修补版本清单
+│   └── chr-patched.aarch64.qemu.pkl  # 已修补版本清单
 ├── Files/                 # 静态文件
 │   └── efi_vars.fd       # Apple 虚拟化 EFI 变量
 ├── Makefile              # 构建脚本
@@ -127,7 +127,7 @@ export UTM_ARCHITECTURE=aarch64
 - 无额外磁盘
 - 适用于一般路由功能测试
 
-### 2. CHR-LTD（Cloud Hosted Router Patched）- LTD 已修补版
+### 2. CHR-PATCHED（Cloud Hosted Router Patched）- 已修补版
 
 - 基于 mikrotik.ltd 提供的已修补 RouterOS 镜像
 - 已修补公钥，支持完整功能
@@ -186,8 +186,6 @@ export UTM_ARCHITECTURE=aarch64
 
 **LTD 源**：
 - 使用 mikrotik.ltd 提供的已修补镜像（来自 GitHub elseif/MikroTikPatch releases）
-- 国内用户可使用 GitHub 代理加速
-- LTD 镜像包含公钥修补，支持完整功能
 
 **版本配置**：
 ```bash

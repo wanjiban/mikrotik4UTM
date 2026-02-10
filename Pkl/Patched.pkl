@@ -10,8 +10,8 @@ class PatchedVersion {
 
   downloadUrl: URL.Download = new {
     name = "\(product)-\(version).\(_imageType)"
-    url = "https://github.com/elseif/MikroTikPatch/releases/download/\(version)\(archSuffix)/\(product)-\(version)\(archSuffix).\(_imageType)"
-    filename = "\(product)-\(version)\(archSuffix).img"
+    url = "https://github.com/elseif/MikroTikPatch/releases/download/\(version)\(_archSuffix)/\(product)-\(version)\(_archSuffix).\(_imageType)"
+    filename = "\(product)-\(version)\(_archSuffix).img"
   }
 
   _imageType: String = "img.zip"

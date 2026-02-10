@@ -8,15 +8,29 @@ class PatchedVersion {
   arch: "x86_64" | "aarch64"
   product: "chr" = "chr"
 
+  _resolvedVersion: String = _resolveVersion(name, arch)
+  _archTag: String = if (arch == "x86_64") "" else "-" + arch.replaceAll("aarch64", "arm64")
+  _releaseTag: String = "\(_resolvedVersion)\(_archTag)"
+
   downloadUrl: URL.Download = new {
-    name = "\(product)-\(version).\(_imageType)"
-    url = "https://github.com/elseif/MikroTikPatch/releases/download/\(version)\(_archSuffix)/\(product)-\(version)\(_archSuffix).\(_imageType)"
-    filename = "\(product)-\(version)\(_archSuffix).img"
+    name = "\(product)-\(_resolvedVersion)\(_archTag).\(_imageType)"
+    url = "https://github.com/elseif/MikroTikPatch/releases/download/\(_releaseTag)/\(product)-\(_releaseTag).\(_imageType)"
+    filename = "\(product)-\(_resolvedVersion)\(_archTag).img"
   }
 
   _imageType: String = "img.zip"
-  _archSuffix: String = if (arch == "x86_64" && product == "chr") "" else "-" + arch
-  version: String = name
+
+  function _resolveVersion(versionName: String, archName: String): String =
+    if (versionName == "stable" && archName == "aarch64")
+      read("https://upgrade.mikrotik.ltd/routeros/NEWESTa7.stable").text.split(" ")[0] + "-arm64"
+    else if (versionName == "stable")
+      read("https://upgrade.mikrotik.ltd/routeros/NEWESTa7.stable").text.split(" ")[0]
+    else if (versionName == "testing" && archName == "aarch64")
+      read("https://upgrade.mikrotik.ltd/routeros/NEWESTa7.testing").text.split(" ")[0] + "-arm64"
+    else if (versionName == "testing")
+      read("https://upgrade.mikrotik.ltd/routeros/NEWESTa7.testing").text.split(" ")[0]
+    else
+      versionName
 }
 
 class PatchedIcon extends SVG.Icon {

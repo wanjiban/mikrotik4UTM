@@ -7,7 +7,7 @@ on:
       version:
         default: "stable"
         type: string
-        description: 'RouterOS 版本或通道 (例如: stable, 7.20.8)'
+        description: 'RouterOS 版本或通道 (例如: stable, testing, 7.20.8)'
         required: true
       pklversion:
         default: "0.30.2"
